@@ -6,7 +6,7 @@ import json
 from generic_functions import *
 from door_functions import *
 
-def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size, image_file_name=None):
+def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size=70, image_file_name=None):
     """
     Converts a DScrawl file to a UVTT file format.
 
@@ -20,16 +20,14 @@ def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size, image_f
     Returns:
         None
     """
-    map_data = parse_map_data(dscrawl_file_name)
-    geometry_ids = get_geometry_ids(map_data)
+    dscrawl_map_dict = parse_map_data(dscrawl_file_name)
+    geometry_ids = get_geometry_ids(dscrawl_map_dict)
 
-    polygons, polylines = extract_geometry(map_data, geometry_ids["walls"])
+    obstruction_lines = convert_geometry_to_obstruction_lines(dscrawl_map_dict, geometry_ids["walls"])
 
-    obstruction_lines = convert_polygons(polygons) + convert_polylines(polylines)
-     
     obstruction_lines = scale_and_offset_coordinates(obstruction_lines)
 
-    portals = generate_portals(map_data, geometry_ids["doors"])
+    portals = generate_portals(dscrawl_map_dict, geometry_ids["doors"])
 
     map_dict = generate_map_dict(map_size=[map_width,map_height], cell_size=tile_size)
     map_dict["line_of_sight"] = obstruction_lines
@@ -50,7 +48,7 @@ if __name__ == "__main__":
     parser.add_argument("dscrawl_file_name", type=str, help="Path to DungeonScrawl file.")
     parser.add_argument("map_width", type=int, help="Map width (in tiles).")
     parser.add_argument("map_height", type=int, help="Map height (in tiles).")
-    parser.add_argument("tile_size", type=int, help="Singe tile size (in pizels).")
+    parser.add_argument("--tile_size", type=int, default=70, help="Singe tile size (in pizels).")
     parser.add_argument("--image", type=str, default=None, help="Path to image file.")
     args = parser.parse_args()
 

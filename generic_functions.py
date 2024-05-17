@@ -8,8 +8,8 @@ origin_offset = []
 def generate_map_dict(map_size, cell_size):
     format = 0.3
     origin = [0,0]
-    size = map_size  # in tiles
-    cell_size = cell_size  # in pixels
+    size = map_size 
+    cell_size = cell_size
 
     generic_info = {
         "format": format,
@@ -72,19 +72,6 @@ def get_geometry_ids(map_data):
 
     return {"walls": geo_wall_ids, "doors": geo_door_ids}
 
-def extract_geometry(map_data, geometry_ids):
-    geometry = map_data["data"]["geometry"]
-    polygons = []
-    polylines = []
-    
-    for geometry_id in geometry_ids:
-        layer_geometry = geometry[geometry_id]
-
-        polygons += layer_geometry["polygons"]
-        polylines += layer_geometry["polylines"]
-
-    return polygons, polylines
-
 
 def update_origin_offset(coordinate):
     global origin_offset
@@ -96,40 +83,37 @@ def update_origin_offset(coordinate):
         origin_offset[0] = min(origin_offset[0], x)
         origin_offset[1] = min(origin_offset[1], y)
 
-# TODO: combine convert_polygons and convert_polylines in single function
-def convert_polygons(polygons):
-    obstruction_lines = []
 
-    # Don't know what the value of the outer container is
-    for container in polygons:
-        for polygon in container:
-            coordinate_list = []
-            for coordinate in polygon:
-                update_origin_offset(coordinate)
-                pair = {
-                    "x": coordinate[0],
-                    "y": coordinate[1],
-                }
-                coordinate_list.append(pair)
-            obstruction_lines.append(coordinate_list)
+def geometry_container_to_coordinates_list(geometry_container):
+    coordinates_list = []
     
-    return obstruction_lines
-
-
-def convert_polylines(polylines):
-    obstruction_lines = []
-
-    for polyline in polylines:
-        coordinate_list = []
+    for polyline in geometry_container:
+        coordinate_pairs_list = []
         for coordinate in polyline:
             update_origin_offset(coordinate)
             pair = {
                 "x": coordinate[0],
                 "y": coordinate[1],
             }
-            coordinate_list.append(pair)
-        obstruction_lines.append(coordinate_list)
+            coordinate_pairs_list.append(pair)
+        coordinates_list.append(coordinate_pairs_list)
     
+    return coordinates_list
+
+def convert_geometry_to_obstruction_lines(map_data, geometry_ids):
+    geometry = map_data["data"]["geometry"]
+    obstruction_lines = []
+    
+    for geometry_id in geometry_ids:
+        layer_geometry = geometry[geometry_id]
+
+        for container in layer_geometry["polygons"]:
+            polygons_coordinate_list = geometry_container_to_coordinates_list(container)
+            obstruction_lines += polygons_coordinate_list
+
+        polylines_coordinate_list = geometry_container_to_coordinates_list(layer_geometry["polylines"])
+        obstruction_lines += polylines_coordinate_list
+   
     return obstruction_lines
 
 

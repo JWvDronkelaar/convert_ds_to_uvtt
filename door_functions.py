@@ -4,7 +4,16 @@ from generic_functions import *
 
 
 def get_door_type(polylines, polygons):
-    # returns 0 for invalid type, otherwise "A" or "B"
+    """
+    Determines the type of a door based on the given polylines and polygons.
+
+    Args:
+        polylines (list): A list of polylines representing the door.
+        polygons (list): A list of polygons representing the door.
+
+    Returns:
+        str or int: The type of the door. Returns "A" or "B" for valid types, and 0 for an invalid type.
+    """
     polylines_count = len(polylines)
     polygons_count = len(polygons[0])
 
@@ -20,10 +29,10 @@ def get_door_type(polylines, polygons):
     if (polylines_count == 2 
             and polygons_count == 1
             and polylines_point_count == 4
-            and polygons_point_count == 4):  # rectangle has one overlapping point!
+            and polygons_point_count == 4):
         return "A"
     
-    # just a plain rectangle stretching
+    # just a plain rectangle
     if (polylines_count == 0 
             and polygons_count == 1):
         return "B"
@@ -31,17 +40,15 @@ def get_door_type(polylines, polygons):
     return 0
         
 
-def calculate_line_for_door_A(door_polylines, door_polygons):
+def calculate_obstruction_line_for_door_A(door_polylines, door_polygons):
     return [{"x":door_polylines[0][0][0], "y":door_polylines[0][0][1]},
             {"x":door_polylines[1][1][0], "y":door_polylines[1][1][1]}]
 
 
-def calculate_line_for_door_B(door_polylines, door_polygons):
-    # this type of door only contains one rectangular polygon
+def calculate_obstruction_line_for_door_B(door_polylines, door_polygons):
     polygon = door_polygons[0][0]
 
-    # coordinates start at long edge of the rectangle
-    long_edge = [polygon[0], polygon[1]]
+    long_edge = [polygon[0], polygon[1]]  # coordinates start at longe edge
     
     offset = [(polygon[1][0] - polygon[2][0])/2,
               (polygon[1][1] - polygon[2][1])/2]
@@ -63,34 +70,30 @@ def generate_door_obstruction_lines(map_data, geometry_ids):
         door_polygons = layer_geometry["polygons"]
         door_type = get_door_type(door_polylines, door_polygons)
 
-        print(f"Calculating door: {geometry_id}")
-        print(f"Door type: {door_type}")
-
         if door_type == 0:
             continue
         elif door_type == "A":
-            door_obstruction_line = calculate_line_for_door_A(door_polylines, door_polygons)
+            door_obstruction_line = calculate_obstruction_line_for_door_A(door_polylines, door_polygons)
         elif door_type == "B":
-            door_obstruction_line = calculate_line_for_door_B(door_polylines, door_polygons)
+            door_obstruction_line = calculate_obstruction_line_for_door_B(door_polylines, door_polygons)
         
         obstruction_lines.append(door_obstruction_line)
 
     return obstruction_lines
 
 
-def calculate_midpoint(p1, p2):
+def calculate_midpoint_between_two_points(p1, p2):
     mx = (p1["x"] + p2["x"]) / 2
     my = (p1["y"] + p2["y"]) / 2
     
     return {"x": mx, "y": my}
 
 
-def calculate_angle(p1, p2):
+def calculate_angle_between_two_points(p1, p2):
     dx = p2["x"] - p1["x"]
     dy = p2["y"] - p1["y"]
 
-    # Calculate the angle in radians
-    return math.atan2(dy, dx)
+    return math.atan2(dy, dx)  # in radians
 
 
 def generate_portals(map_data, geometry_ids):
@@ -99,13 +102,12 @@ def generate_portals(map_data, geometry_ids):
     portals = []
 
     for line in door_obstruction_lines:
-        position = calculate_midpoint(line[0], line[1])
-        rotation = calculate_angle(line[0], line[1])
+        position = calculate_midpoint_between_two_points(line[0], line[1])
+        rotation = calculate_angle_between_two_points(line[0], line[1])
 
         portal = {}
         portal["position"] = position
         portal["bounds"] = line
-        # portal["rotation"] = 1.570796,
         portal["rotation"] = rotation
         portal["closed"] = True,
         portal["freestanding"] = False
