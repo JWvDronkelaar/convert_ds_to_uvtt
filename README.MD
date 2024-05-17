@@ -1,6 +1,6 @@
 # DungeonScrawl to UVTT
 
-Command line tool to convert a [DungeonScrawl](https://app.dungeonscrawl.com/) file to the more generic and widely supported UVTT file format.
+Command line tool to convert a [DungeonScrawl](https://app.dungeonscrawl.com/) file to the more generic and widely supported UVTT (Universal Virtual Table Top) file format.
 
 ## Table of Contents
 
@@ -35,7 +35,7 @@ Now save your dscrawl map from the file menu. Place both the `.png` and the `.ds
 
 ### 4 - Convert to UVVT
 
-You can call the tool with the following arguments
+You call the tool with the following arguments
 
 #### Positional arguments (required)
 - DungeonScrawl file to convert.
@@ -49,9 +49,11 @@ You can call the tool with the following arguments
 
 #### Example
 
-Here is a practical example of how to use the script. Imagine your dungeonscrawl file is `dungeon_map.ds`, your exported image file is `dungeon_map_20x32.png`. You have not changed the `px per cell` value when exporting from its default value of `70`.
+Imagine your dungeonscrawl file is `dungeon_map.ds` and the exported image file is `dungeon_map_20x32.png`. You have not changed the `px per cell` value when exporting from its default value of `70`. You've placed these files in the same folder as the `dscrawl_to_uvtt.py` script.
 
-`python convert_ds_to_uvtt.py dungeon_map.ds 20 32 -t 70 -i dungeon_map_20x32.png`
+Now type the following command in the terminal:
+
+`python dscrawl_to_uvtt.py dungeon_map.ds 20 32 -i dungeon_map_20x32.png`
 
 ## Support
 

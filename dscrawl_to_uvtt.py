@@ -68,11 +68,12 @@ def get_geometry_ids(map_data):
     for layer_id in layer_ids:
         layer = layers[layer_id]
         type = layer["type"]
+        layer_name = layer["name"]
 
-        if type == "GEOMETRY" and "geometryId" in layer:
-            if layer["name"].startswith("Door"):
+        if type == "GEOMETRY":
+            if layer_name == "Door geometry":
                 geo_door_ids.append(layer["geometryId"])
-            else:
+            elif layer_name != "Stairs geometry":
                 geo_wall_ids.append(layer["geometryId"])
 
     return {"walls": geo_wall_ids, "doors": geo_door_ids}
