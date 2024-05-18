@@ -6,7 +6,7 @@ import re
 
 DESCRIPTION = "Convert a DungeonScrawl file to a .dd2vtt file."
 VERSION = "1.0.0"
-USE_GOOEY = True
+USE_GOOEY = False
 
 SCALE = 0.0277777777777778
 origin_offset = []
