@@ -1,9 +1,12 @@
-
 import base64
 import argparse
 import json
 import math
 import re
+
+DESCRIPTION = "Convert a DungeonScrawl file to a .dd2vtt file."
+VERSION = "1.0.0"
+USE_GOOEY = True
 
 SCALE = 0.0277777777777778
 origin_offset = []
@@ -156,13 +159,12 @@ def get_door_type(polylines, polygons):
     polygons_point_count = 0
     for polygon in polygons[0]:
         polygons_point_count += len(polygon)
-
-    # rectangle with small wall segments on either end
-    if (polylines_count == 2 
-            and polygons_count == 1
-            and polylines_point_count == 4
-            and polygons_point_count == 4):
-        return "A"
+        # rectangle with small wall segments on either end
+        if (polylines_count == 2 
+                and polygons_count == 1
+                and polylines_point_count == 4
+                and (polygons_point_count == 4 or polygons_point_count == 5)):
+            return "A"
     
     # just a plain rectangle
     if (polylines_count == 0 
@@ -251,19 +253,6 @@ def generate_portals(map_data, geometry_ids):
 
 
 def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size=70, image_file_name=None):
-    """
-    Converts a DScrawl file to a UVTT file format.
-
-    Args:
-        dscrawl_file_name (str): The name of the DScrawl file to convert.
-        map_width (int): The width of the map in cells.
-        map_height (int): The height of the map in cells.
-        tile_size (int): The size of each tile in pixels.
-        image_file_name (str, optional): The name of the image file to include in the UVTT file. Defaults to None.
-
-    Returns:
-        None
-    """
     dscrawl_map_dict = parse_map_data(dscrawl_file_name)
     geometry_ids = get_geometry_ids(dscrawl_map_dict)
 
@@ -286,17 +275,42 @@ def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size=70, imag
     with open(output_file_name, 'w') as file:
         json.dump(map_dict, file, indent=4)
 
+    print(f"File '{output_file_name}' created successfully.")
+
+if USE_GOOEY:
+    from gooey import Gooey, GooeyParser
+
+    @Gooey(program_name='Dungeon Scrawl to UVTT', image_dir='C:/Users/JW/Documents/vscode/convert_ds_to_uvtt/images', show_stop_warning=False, show_success_modal=False, header_bg_color="#FBAB7E", default_size=(550, 630))
+    def parse_arguments_with_gooey():
+        parser = GooeyParser(description=DESCRIPTION)
+
+        optional_group = parser.add_argument_group("Optional arguments", gooey_options={"columns": 1})
+
+        parser.add_argument("dscrawl_file_name", help="The name of the DungeonScrawl file to convert.", metavar="Dungeon Scrawl file", widget="FileChooser", gooey_options={"full_width": True})
+        parser.add_argument("map_width", help="The width of the map in tiles.", type=int, action="store", metavar="Map width")
+        parser.add_argument("map_height", help="The height of the map in tiles.", type=int, action="store", metavar="Map height")
+        optional_group.add_argument("-i", "--image_file_name", help="The name of the image file to include.", default=None, metavar="Image file", widget="FileChooser", gooey_options={"full_width": True})
+        optional_group.add_argument("-t", "--tile_size", help="The size of a single tile in pixels.", default=70, type=int, action="store", metavar="Tile size")
+        
+        return parser.parse_args()
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("dscrawl_file_name", help="The name of the DungeonScrawl file to convert.", metavar="Dungeon Scrawl file")
+    parser.add_argument("map_width", help="The width of the map in tiles.", type=int, metavar="Map width")
+    parser.add_argument("map_height", help="The height of the map in tiles.", type=int, metavar="Map height")
+    parser.add_argument("-i", "--image_file_name", help="The name of the image file to include.", default=None, metavar="Image file")
+    parser.add_argument("-t", "--tile_size", help="The size of a single tile in pixels.", default=70, type=int, metavar="Tile size")
+    
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="convert a DungeonScrawl file to a .dd2vtt file")
-    parser.add_argument("dscrawl_file_name", type=str, help="DungeonScrawl file")
-    parser.add_argument("map_width", type=int, help="map width (in tiles)")
-    parser.add_argument("map_height", type=int, help="map height (in tiles)")
-    parser.add_argument("-t", "--tile_size", type=int, default=70, help="singe tile size (in pixels)", metavar="")
-    parser.add_argument("-i", "--image", type=str, default=None, help="image file", metavar="")
-    args = parser.parse_args()
+    if USE_GOOEY:
+        args = parse_arguments_with_gooey()
+    else:
+        args = parse_arguments()
 
-    dscrawl_to_uvtt(
-        args.dscrawl_file_name, args.map_width, 
-        args.map_height, args.tile_size, 
-        image_file_name=args.image)
+    dscrawl_to_uvtt(args.dscrawl_file_name, args.map_width, args.map_height, args.tile_size, args.image_file_name)
