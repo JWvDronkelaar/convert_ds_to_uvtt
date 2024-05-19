@@ -27,7 +27,13 @@ Draw your map in DungeonScrawl while keeping the following limitations in mind. 
  
  ### 3 - Save map and export image
  
- When exporting to a `.png` make certain the exported area's top left corner matches the corner you've drawn. If you do not do this your `.dd2vtt` file will have a weird offset.
+ When exporting to a `.png` make certain the exported area's top left corner matches the corner you've drawn as shown in Fig 1. If you do not do this your `.dd2vtt` file will have a weird offset.
+
+<p align="center">
+  <img src="./images/export_area_with_top_left_mark.png" alt="Top left export area with mark">
+  <br>
+  <em>Fig 1: Top left export area with mark</em>
+</p>
 
 The exported area should encompass full tiles only, no half or quarter tiles. If you change the value of `px per cell` from the default of `70`, make a note of it since you will need it later.
 
