@@ -6,8 +6,6 @@ import re
 
 DESCRIPTION = "Convert a DungeonScrawl file to a .dd2vtt file."
 VERSION = "1.0.0"
-USE_GOOEY = False
-
 SCALE = 0.0277777777777778
 origin_offset = []
 
@@ -110,11 +108,13 @@ def geometry_container_to_coordinates_list(geometry_container):
     return coordinates_list
 
 def convert_geometry_to_obstruction_lines(map_data, geometry_ids):
+    print(f"Converting geometry containers to obstruction lines...")
     geometry = map_data["data"]["geometry"]
     obstruction_lines = []
     
     for geometry_id in geometry_ids:
         layer_geometry = geometry[geometry_id]
+        print(f"Processing geometry container '{geometry_id}'...")
 
         for container in layer_geometry["polygons"]:
             polygons_coordinate_list = geometry_container_to_coordinates_list(container)
@@ -123,6 +123,7 @@ def convert_geometry_to_obstruction_lines(map_data, geometry_ids):
         polylines_coordinate_list = geometry_container_to_coordinates_list(layer_geometry["polylines"])
         obstruction_lines += polylines_coordinate_list
    
+    print(f"{len(obstruction_lines)} obstruction lines generated!")
     return obstruction_lines
 
 
@@ -205,11 +206,14 @@ def generate_door_obstruction_lines(map_data, geometry_ids):
         door_type = get_door_type(door_polylines, door_polygons)
 
         if door_type == 0:
+            print(f"Failed to recognize type of door '{geometry_id}'")
             continue
         elif door_type == "A":
             door_obstruction_line = calculate_obstruction_line_for_door_A(door_polylines, door_polygons)
+            print(f"Generated obstruction line for door '{geometry_id}' as type 'A'")
         elif door_type == "B":
             door_obstruction_line = calculate_obstruction_line_for_door_B(door_polylines, door_polygons)
+            print(f"Generated obstruction line for door '{geometry_id}' as type 'B'")
         
         obstruction_lines.append(door_obstruction_line)
 
@@ -231,6 +235,7 @@ def calculate_angle_between_two_points(p1, p2):
 
 
 def generate_portals(map_data, geometry_ids):
+    print(f"Generating portals from {len(geometry_ids)} door entities...")
     door_obstruction_lines = generate_door_obstruction_lines(map_data, geometry_ids)
     door_obstruction_lines = scale_and_offset_coordinates(door_obstruction_lines)
     portals = []
@@ -247,6 +252,7 @@ def generate_portals(map_data, geometry_ids):
         portal["freestanding"] = False
         portals.append(portal)
     
+    print(f"{len(door_obstruction_lines)} portals from doors generated!")
     return portals
 
 # endregion
@@ -277,23 +283,6 @@ def dscrawl_to_uvtt(dscrawl_file_name, map_width, map_height, tile_size=70, imag
 
     print(f"File '{output_file_name}' created successfully.")
 
-if USE_GOOEY:
-    from gooey import Gooey, GooeyParser
-
-    @Gooey(program_name='Dungeon Scrawl to UVTT', image_dir='C:/Users/JW/Documents/vscode/convert_ds_to_uvtt/images', show_stop_warning=False, show_success_modal=False, header_bg_color="#FBAB7E", default_size=(550, 630))
-    def parse_arguments_with_gooey():
-        parser = GooeyParser(description=DESCRIPTION)
-
-        optional_group = parser.add_argument_group("Optional arguments", gooey_options={"columns": 1})
-
-        parser.add_argument("dscrawl_file_name", help="The name of the DungeonScrawl file to convert.", metavar="Dungeon Scrawl file", widget="FileChooser", gooey_options={"full_width": True})
-        parser.add_argument("map_width", help="The width of the map in tiles.", type=int, action="store", metavar="Map width")
-        parser.add_argument("map_height", help="The height of the map in tiles.", type=int, action="store", metavar="Map height")
-        optional_group.add_argument("-i", "--image_file_name", help="The name of the image file to include.", default=None, metavar="Image file", widget="FileChooser", gooey_options={"full_width": True})
-        optional_group.add_argument("-t", "--tile_size", help="The size of a single tile in pixels.", default=70, type=int, action="store", metavar="Tile size")
-        
-        return parser.parse_args()
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -308,9 +297,5 @@ def parse_arguments():
 
 
 if __name__ == "__main__":
-    if USE_GOOEY:
-        args = parse_arguments_with_gooey()
-    else:
-        args = parse_arguments()
-
+    args = parse_arguments()
     dscrawl_to_uvtt(args.dscrawl_file_name, args.map_width, args.map_height, args.tile_size, args.image_file_name)
